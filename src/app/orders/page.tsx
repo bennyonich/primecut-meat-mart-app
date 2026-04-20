@@ -18,7 +18,10 @@ export default async function OrdersPage() {
   const orders = await db.order
     .findMany({
       where: { userId: session.user.id },
-      include: { items: { include: { product: true } } },
+      include: {
+        items: { include: { product: true } },
+        meatShareItems: { include: { meatShareOffering: true } },
+      },
       orderBy: { createdAt: "desc" },
     })
     .catch(() => []);
@@ -38,6 +41,16 @@ export default async function OrdersPage() {
             <p className="text-sm text-zinc-400">
               Delivery: {order.deliverySlot} - {order.deliveryAddress}
             </p>
+            {order.meatShareItems.length > 0 ? (
+              <ul className="mt-3 space-y-1 border-t border-zinc-800 pt-3 text-sm text-zinc-300">
+                {order.meatShareItems.map((line) => (
+                  <li key={line.id}>
+                    Meat sharing · {line.meatShareOffering.title} × {line.quantity} —{" "}
+                    {formatNaira(line.unitPriceNgnKobo * line.quantity)}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </article>
         ))}
       </div>

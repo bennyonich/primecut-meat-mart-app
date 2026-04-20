@@ -26,6 +26,19 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum MeatShareAnimal {
+  COW
+  RAM
+  GOAT
+}
+
+/// Cow: buy 1–N slots of a full animal. Ram/Goat: half or quarter portions.
+enum MeatShareKind {
+  COW_SLOT
+  HALF
+  QUARTER
+}
+
 model User {
   id            String         @id @default(cuid())
   name          String
@@ -67,17 +80,18 @@ model Product {
 }
 
 model Order {
-  id                 String      @id @default(cuid())
+  id                 String              @id @default(cuid())
   userId             String
-  status             OrderStatus @default(PENDING)
+  status             OrderStatus         @default(PENDING)
   totalAmountNgnKobo Int
   deliveryAddress    String
   deliverySlot       String
-  paystackReference  String?     @unique
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
-  user               User        @relation(fields: [userId], references: [id])
+  paystackReference  String?             @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  user               User                @relation(fields: [userId], references: [id])
   items              OrderItem[]
+  meatShareItems     OrderMeatShareItem[]
 }
 
 model OrderItem {
@@ -88,6 +102,41 @@ model OrderItem {
   unitPriceNgnKobo Int
   order            Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product          Product @relation(fields: [productId], references: [id])
+}
+
+/// Group buy: e.g. full cow split into 10 slots, or ram/goat half & quarter.
+model MeatShareOffering {
+  id                 String          @id @default(cuid())
+  title              String
+  description        String
+  imageUrl           String?
+  animal             MeatShareAnimal
+  kind               MeatShareKind
+  /// Cow only: total slots (e.g. 10). Null for ram/goat portions.
+  totalSlots         Int?
+  /// Cow: slots still available. Ignored for HALF/QUARTER (use stockRemaining).
+  slotsRemaining     Int?
+  /// Ram/Goat half/quarter: units in stock.
+  stockRemaining     Int             @default(0)
+  /// Price per slot (cow) or fixed price for half or quarter (kobo).
+  priceNgnKobo       Int
+  isActive           Boolean         @default(true)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  orderLines         OrderMeatShareItem[]
+
+  @@unique([animal, kind])
+}
+
+model OrderMeatShareItem {
+  id                    String             @id @default(cuid())
+  orderId               String
+  meatShareOfferingId   String
+  /// Slots purchased (cow) or 1 for half/quarter.
+  quantity              Int
+  unitPriceNgnKobo      Int
+  order                 Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  meatShareOffering     MeatShareOffering  @relation(fields: [meatShareOfferingId], references: [id])
 }
 
 model Review {

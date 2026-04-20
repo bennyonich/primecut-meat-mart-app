@@ -47,6 +47,7 @@ export default function CheckoutPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               items: [{ productId, quantity }],
+              meatShareItems: [],
               deliveryAddress,
               deliverySlot,
             }),
