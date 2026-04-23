@@ -15,9 +15,9 @@ Production-ready MVP foundation for a meat ordering app in Nigeria (NGN), with:
 ## Local setup
 
 1. Update `.env`:
-   - `DATABASE_URL`
-   - `NEXTAUTH_SECRET`
-   - `PAYSTACK_SECRET_KEY` (required for live Paystack URL)
+  - `DATABASE_URL`
+  - `NEXTAUTH_SECRET`
+  - `PAYSTACK_SECRET_KEY` (required for live Paystack URL)
 2. Run migrations and seed:
 
 ```bash
@@ -25,7 +25,7 @@ npm run db:migrate
 npm run db:seed
 ```
 
-3. Start app:
+1. Start app:
 
 ```bash
 npm run dev
@@ -51,3 +51,4 @@ npm run dev
 - `GET/POST /api/subscriptions`
 - `GET/POST /api/chat`
 - `POST /api/seed`
+
