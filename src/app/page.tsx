@@ -104,7 +104,10 @@ export default async function Home() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-2xl font-semibold text-rose-200">Catalog</h2>
+        <h2 className="mb-1 text-2xl font-semibold text-rose-200">Per-kilogram catalog</h2>
+        <p className="mb-4 text-sm text-zinc-400">
+          Buy cow, goat, ram, chicken, and turkey by kilogram.
+        </p>
         <div className="grid gap-4 md:grid-cols-2">
           {visibleProducts.map((product) => (
             <article

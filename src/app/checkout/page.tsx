@@ -37,7 +37,10 @@ export default function CheckoutPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
       <h1 className="text-2xl font-semibold">Cart + Checkout</h1>
-      <p className="mt-2 text-zinc-400">This initializes Paystack with NGN pricing.</p>
+      <p className="mt-2 text-zinc-400">
+        Buy per-kilogram cuts (cow, goat, ram, chicken, turkey). This initializes Paystack with
+        NGN pricing.
+      </p>
       <form
         className="mt-6 space-y-4"
         onSubmit={async (e) => {
@@ -78,6 +81,7 @@ export default function CheckoutPage() {
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
         />
+        <p className="text-xs text-zinc-500">Quantity here is in kilograms.</p>
         <input
           className="w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2"
           placeholder="Delivery address"

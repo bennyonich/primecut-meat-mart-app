@@ -3,13 +3,14 @@
 Production-ready MVP foundation for a meat ordering app in Nigeria (NGN), with:
 
 - Buyer auth (register + login)
-- Product catalog + inventory fielding
+- Product catalog + inventory fielding (cow, goat, ram, chicken, turkey sold per kilogram)
 - Cart/checkout endpoint with Paystack initialization
 - Delivery address + slot capture
 - Order tracking
 - Reviews API
 - Recurring subscriptions API
 - Buyer support chat API/page
+- Meat-sharing offering (cow slots, ram/goat half & quarter)
 
 ## Local setup
 
