@@ -34,17 +34,27 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
+  const p = parsed.data;
   const data: {
     priceNgnKobo?: number;
     inventoryInStock?: number;
     imageUrl?: string | null;
-  } = { ...parsed.data };
-  if (data.imageUrl !== undefined) {
-    const img = normalizeImageUrl(data.imageUrl);
+  } = {};
+  if (p.priceNgnKobo !== undefined) {
+    data.priceNgnKobo = p.priceNgnKobo;
+  }
+  if (p.inventoryInStock !== undefined) {
+    data.inventoryInStock = p.inventoryInStock;
+  }
+  if (p.imageUrl !== undefined) {
+    const img = normalizeImageUrl(p.imageUrl);
     if (img === "invalid") {
       return NextResponse.json({ error: "Invalid imageUrl" }, { status: 400 });
     }
     data.imageUrl = img;
+  }
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
   }
 
   await db.product.update({

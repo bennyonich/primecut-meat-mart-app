@@ -40,23 +40,29 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const p = parsed.data;
   const data: {
     priceNgnKobo?: number;
     slotsRemaining?: number | null;
     stockRemaining?: number;
     imageUrl?: string | null;
-  } = { ...parsed.data };
-  if (row.kind !== "COW_SLOT") {
-    delete data.slotsRemaining;
+  } = {};
+  if (p.priceNgnKobo !== undefined) {
+    data.priceNgnKobo = p.priceNgnKobo;
   }
-  if (data.imageUrl !== undefined) {
-    const img = normalizeImageUrl(data.imageUrl);
+  if (p.stockRemaining !== undefined) {
+    data.stockRemaining = p.stockRemaining;
+  }
+  if (p.imageUrl !== undefined) {
+    const img = normalizeImageUrl(p.imageUrl);
     if (img === "invalid") {
       return NextResponse.json({ error: "Invalid imageUrl" }, { status: 400 });
     }
     data.imageUrl = img;
   }
-
+  if (p.slotsRemaining !== undefined && row.kind === "COW_SLOT") {
+    data.slotsRemaining = p.slotsRemaining;
+  }
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });
   }
