@@ -15,6 +15,7 @@ type Product = {
 type Meat = {
   id: string;
   title: string;
+  kind: "COW_SLOT" | "HALF" | "QUARTER";
   priceNgnKobo: number;
   slotsRemaining: number | null;
   stockRemaining: number;
@@ -88,8 +89,10 @@ export function AdminDashboard({ products, meatShare }: { products: Product[]; m
                   <input
                     className="mt-1 w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm"
                     name="imageUrl"
-                    type="url"
-                    placeholder="https://…"
+                    type="text"
+                    inputMode="url"
+                    autoComplete="off"
+                    placeholder="https://… (leave empty to clear)"
                     defaultValue={p.imageUrl ?? ""}
                   />
                 </label>
@@ -119,17 +122,23 @@ export function AdminDashboard({ products, meatShare }: { products: Product[]; m
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const fd = new FormData(e.currentTarget);
+                  const imageRaw = (fd.get("imageUrl") as string) ?? "";
+                  const payload: Record<string, string | number | null> = {
+                    priceNgnKobo: Number(fd.get("priceNgnKobo")),
+                    stockRemaining: Number(fd.get("stockRemaining")),
+                    imageUrl: imageRaw.trim() === "" ? null : imageRaw.trim(),
+                  };
+                  if (m.kind === "COW_SLOT") {
+                    const slotRaw = (fd.get("slotsRemaining") as string) ?? "";
+                    const t = slotRaw.trim();
+                    if (t !== "" && !Number.isNaN(Number(t))) {
+                      payload.slotsRemaining = Number(t);
+                    }
+                  }
                   const res = await fetch(`/api/admin/meat-share/${m.id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      priceNgnKobo: Number(fd.get("priceNgnKobo")),
-                      slotsRemaining: fd.get("slotsRemaining")
-                        ? Number(fd.get("slotsRemaining"))
-                        : null,
-                      stockRemaining: Number(fd.get("stockRemaining")),
-                      imageUrl: (fd.get("imageUrl") as string) || null,
-                    }),
+                    body: JSON.stringify(payload),
                   });
                   if (res.ok) {
                     setMsg("Saved meat sharing.");
@@ -150,17 +159,23 @@ export function AdminDashboard({ products, meatShare }: { products: Product[]; m
                     required
                   />
                 </label>
-                <label className="text-xs text-zinc-500">
-                  Cow slots left (or 0 for non-slot)
-                  <input
-                    className="mt-1 w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm"
-                    name="slotsRemaining"
-                    type="number"
-                    min={0}
-                    defaultValue={m.slotsRemaining ?? ""}
-                    placeholder="—"
-                  />
-                </label>
+                {m.kind === "COW_SLOT" ? (
+                  <label className="text-xs text-zinc-500">
+                    Cow slots left
+                    <input
+                      className="mt-1 w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm"
+                      name="slotsRemaining"
+                      type="number"
+                      min={0}
+                      defaultValue={m.slotsRemaining ?? ""}
+                      placeholder="Leave blank to keep unchanged"
+                    />
+                  </label>
+                ) : (
+                  <p className="text-xs text-zinc-500 md:col-span-1">
+                    Slots apply only to cow; ram/goat use portion stock.
+                  </p>
+                )}
                 <label className="text-xs text-zinc-500">
                   Portion stock
                   <input

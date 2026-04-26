@@ -12,6 +12,7 @@ export default async function AdminPage() {
       meatShare={meatShare.map((m) => ({
         id: m.id,
         title: m.title,
+        kind: m.kind,
         priceNgnKobo: m.priceNgnKobo,
         slotsRemaining: m.slotsRemaining,
         stockRemaining: m.stockRemaining,
