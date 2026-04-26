@@ -59,18 +59,29 @@ export async function POST(request: Request) {
             isActive: true,
           },
         });
-        const priceMap = new Map(products.map((p) => [p.id, p.priceNgnKobo]));
+        const priceMap = new Map(products.map((p) => [p.id, p]));
+        const qtyByProduct = new Map<string, number>();
         for (const line of items) {
-          const unit = priceMap.get(line.productId);
-          if (unit == null) {
+          qtyByProduct.set(line.productId, (qtyByProduct.get(line.productId) ?? 0) + line.quantity);
+        }
+        for (const line of items) {
+          const p = priceMap.get(line.productId);
+          if (!p) {
             throw new Error("PRODUCT_NOT_FOUND");
           }
+          const unit = p.priceNgnKobo;
           total += unit * line.quantity;
           productCreates.push({
             productId: line.productId,
             quantity: line.quantity,
             unitPriceNgnKobo: unit,
           });
+        }
+        for (const p of products) {
+          const need = qtyByProduct.get(p.id) ?? 0;
+          if (p.inventoryInStock < need) {
+            throw new Error("INSUFFICIENT_STOCK");
+          }
         }
       }
 
@@ -80,41 +91,43 @@ export async function POST(request: Request) {
         unitPriceNgnKobo: number;
       }[] = [];
 
-      for (const line of meatShareItems) {
-        const offering = await tx.meatShareOffering.findFirst({
-          where: { id: line.meatShareOfferingId, isActive: true },
-        });
-        if (!offering) {
-          throw new Error("MEAT_OFFER_NOT_FOUND");
+      if (meatShareItems.length > 0) {
+        const needByOffer = new Map<string, number>();
+        for (const line of meatShareItems) {
+          needByOffer.set(
+            line.meatShareOfferingId,
+            (needByOffer.get(line.meatShareOfferingId) ?? 0) + line.quantity,
+          );
         }
-
-        const unit = offering.priceNgnKobo;
-
-        if (offering.kind === "COW_SLOT") {
-          const cap = offering.slotsRemaining ?? 0;
-          if (line.quantity > cap) {
-            throw new Error("COW_SLOTS_EXCEEDED");
-          }
-          await tx.meatShareOffering.update({
-            where: { id: offering.id },
-            data: { slotsRemaining: { decrement: line.quantity } },
-          });
-        } else {
-          if (line.quantity > offering.stockRemaining) {
+        const offerRows = await tx.meatShareOffering.findMany({
+          where: { id: { in: [...needByOffer.keys()] }, isActive: true },
+        });
+        for (const off of offerRows) {
+          const need = needByOffer.get(off.id) ?? 0;
+          if (off.kind === "COW_SLOT") {
+            if (need > (off.slotsRemaining ?? 0)) {
+              throw new Error("COW_SLOTS_EXCEEDED");
+            }
+          } else if (need > off.stockRemaining) {
             throw new Error("PORTION_STOCK_EXCEEDED");
           }
-          await tx.meatShareOffering.update({
-            where: { id: offering.id },
-            data: { stockRemaining: { decrement: line.quantity } },
+        }
+        if (offerRows.length !== needByOffer.size) {
+          throw new Error("MEAT_OFFER_NOT_FOUND");
+        }
+        for (const line of meatShareItems) {
+          const offering = offerRows.find((o) => o.id === line.meatShareOfferingId);
+          if (!offering) {
+            throw new Error("MEAT_OFFER_NOT_FOUND");
+          }
+          const unit = offering.priceNgnKobo;
+          total += unit * line.quantity;
+          meatCreates.push({
+            meatShareOfferingId: offering.id,
+            quantity: line.quantity,
+            unitPriceNgnKobo: unit,
           });
         }
-
-        total += unit * line.quantity;
-        meatCreates.push({
-          meatShareOfferingId: offering.id,
-          quantity: line.quantity,
-          unitPriceNgnKobo: unit,
-        });
       }
 
       const reference = `primecut_${randomUUID()}`;
@@ -204,6 +217,9 @@ export async function POST(request: Request) {
     }
     if (code === "MEAT_OFFER_NOT_FOUND") {
       return NextResponse.json({ error: "Meat-sharing offer not found." }, { status: 400 });
+    }
+    if (code === "INSUFFICIENT_STOCK") {
+      return NextResponse.json({ error: "Not enough stock for the requested weight." }, { status: 409 });
     }
     if (code === "COW_SLOTS_EXCEEDED") {
       return NextResponse.json({ error: "Not enough cow slots available." }, { status: 409 });
