@@ -14,21 +14,27 @@ async function main() {
       create: { name: product.category },
     });
 
-    await prisma.product.upsert({
-      where: { name: product.name },
-      update: {
-        description: product.description,
-        priceNgnKobo: product.priceNgnKobo,
-        inventoryInStock: product.inventoryInStock,
-      },
-      create: {
-        name: product.name,
-        description: product.description,
-        priceNgnKobo: product.priceNgnKobo,
-        inventoryInStock: product.inventoryInStock,
-        categoryId: category.id,
-      },
-    });
+    const existing = await prisma.product.findFirst({ where: { name: product.name } });
+    if (existing) {
+      await prisma.product.update({
+        where: { id: existing.id },
+        data: {
+          description: product.description,
+          priceNgnKobo: product.priceNgnKobo,
+          inventoryInStock: product.inventoryInStock,
+        },
+      });
+    } else {
+      await prisma.product.create({
+        data: {
+          name: product.name,
+          description: product.description,
+          priceNgnKobo: product.priceNgnKobo,
+          inventoryInStock: product.inventoryInStock,
+          categoryId: category.id,
+        },
+      });
+    }
   }
 
   for (const row of meatShareSeedOfferings) {
