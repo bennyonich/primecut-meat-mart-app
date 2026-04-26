@@ -35,18 +35,30 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
+  const row = await db.meatShareOffering.findUnique({ where: { id } });
+  if (!row) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   const data: {
     priceNgnKobo?: number;
     slotsRemaining?: number | null;
     stockRemaining?: number;
     imageUrl?: string | null;
   } = { ...parsed.data };
+  if (row.kind !== "COW_SLOT") {
+    delete data.slotsRemaining;
+  }
   if (data.imageUrl !== undefined) {
     const img = normalizeImageUrl(data.imageUrl);
     if (img === "invalid") {
       return NextResponse.json({ error: "Invalid imageUrl" }, { status: 400 });
     }
     data.imageUrl = img;
+  }
+
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
   }
 
   await db.meatShareOffering.update({

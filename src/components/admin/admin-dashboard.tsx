@@ -45,13 +45,14 @@ export function AdminDashboard({ products, meatShare }: { products: Product[]; m
                 onSubmit={async (e) => {
                   e.preventDefault();
                   const fd = new FormData(e.currentTarget);
+                  const imageRaw = ((fd.get("imageUrl") as string) ?? "").trim();
                   const res = await fetch(`/api/admin/products/${p.id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       priceNgnKobo: Number(fd.get("priceNgnKobo")),
                       inventoryInStock: Number(fd.get("inventoryInStock")),
-                      imageUrl: (fd.get("imageUrl") as string) || null,
+                      imageUrl: imageRaw === "" ? null : imageRaw,
                     }),
                   });
                   if (res.ok) {
@@ -192,8 +193,10 @@ export function AdminDashboard({ products, meatShare }: { products: Product[]; m
                   <input
                     className="mt-1 w-full rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-sm"
                     name="imageUrl"
-                    type="url"
-                    placeholder="https://…"
+                    type="text"
+                    inputMode="url"
+                    autoComplete="off"
+                    placeholder="https://… (leave empty to clear)"
                     defaultValue={m.imageUrl ?? ""}
                   />
                 </label>
