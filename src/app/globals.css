@@ -1,26 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  --albto-bg: #050d1b;
+  --albto-surface: #0f1b33;
+  --albto-surface-alt: #132445;
+  --albto-primary: #2f80ed;
+  --albto-secondary: #00c2a8;
+  --albto-accent: #8b5cf6;
+  --albto-text: #e6ecff;
+  --albto-muted: #a6b4da;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--albto-bg);
+  --color-foreground: var(--albto-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: radial-gradient(circle at 20% 10%, #173067 0%, var(--albto-bg) 42%);
+  color: var(--albto-text);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+.albto-card {
+  border: 1px solid color-mix(in srgb, var(--albto-primary) 24%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--albto-surface) 90%, #fff 10%), var(--albto-surface));
+  box-shadow: 0 8px 32px rgba(5, 11, 25, 0.35);
 }
